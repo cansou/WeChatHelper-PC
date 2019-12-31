@@ -1,0 +1,114 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 涓枃(绠�浣擄紝涓浗) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOGEX 0, 0, 679, 283
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "微信助手，只支持2.7.1.88版本"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "登录",BTN_LOGIN,7,7,50,14
+    EDITTEXT        TEXT_MY_INFO,7,23,114,253,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON      "开始接收消息",BTN_RECE_MSG,126,7,50,14
+    EDITTEXT        TEXT_RECEIVE_MSG,126,23,296,114,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+    PUSHBUTTON      "发送消息",BTN_SEND_MSG,126,143,50,14
+    EDITTEXT        TEXT_SEND_MSG,126,160,296,116,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+    EDITTEXT        TEXT_WXID,229,144,106,14,ES_AUTOHSCROLL
+    LTEXT           "接收人：",IDC_STATIC,195,147,29,8
+    PUSHBUTTON      "Socket",BTN_SOCKET,431,7,50,14
+    EDITTEXT        DEBUG_INFO,431,159,241,116,ES_MULTILINE | ES_AUTOHSCROLL | WS_VSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 672
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 276
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_MAIN AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 涓枃(绠�浣擄紝涓浗) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
