@@ -8,14 +8,16 @@
 #include <iostream>
 #include <iomanip>
 #include "StructInfo.h"
+#include "Utils.h"
+#include "resource.h"
+
 
 //只有windows下才可以这么写，别的平台需要增加配置项
 #pragma comment(lib,"ws2_32.lib")
 
 using namespace std;
 
-void InsertData() {
-
+void InsertData(std::string fromWxid, std::string senderWxid, std::string content) {
 
 	// 初始化mysql上下文
 	MYSQL mysql;
@@ -41,7 +43,6 @@ void InsertData() {
 		cout << "mysql connect timeout !" << mysql_error(&mysql) << endl;
 	}
 
-
 	// 连接数据库
 	if (!mysql_real_connect(&mysql, host, user, pasw, db, 3306, 0, 0)) {
 		cout << "mysql connect failed!" << mysql_error(&mysql) << endl;
@@ -51,15 +52,28 @@ void InsertData() {
 		cout << "mysql connect" << host << "success! " << endl;
 	}
 
-
-
 	string sql = "";
 
 	// 插入数据
 	stringstream ss;
-	ss << "insert `user_addr` (`name`)values('test')";
+	ss << "insert receive_msg ( from_wxid, sender_wxid, content, receive_date ) values( '";
+	ss << fromWxid << "', '";
+	ss << senderWxid << "', '";
+	ss << content << "', '";
+
+	// TODO 封装成函数。 	获取当前时间, 
+	struct tm t;   
+	time_t now;  
+	time(&now);      
+	localtime_s(&t, &now);   
+
+	char szResult[20] = "\0";
+	sprintf_s(szResult, 20, "%.4d-%.2d-%.2d %.2d:%.2d:%.2d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec); //产生"123"
+	ss << szResult << "') ";
 
 	sql = ss.str();
+
+	SetDlgItemText(getGlobalHwnd(), DEBUG_INFO, stringToLPCWSTR(sql));
 
 	re = mysql_query(&mysql, sql.c_str());
 	if (re == 0)

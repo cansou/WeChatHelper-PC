@@ -1,1 +1,2 @@
-void RecieveMsgHook();
+//void RecieveMsgHook();
+void HookWx();

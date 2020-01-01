@@ -1,1 +1,1 @@
-void InsertData();
+void InsertData(std::string fromWxid, std::string senderWxid, std::string content);

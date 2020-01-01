@@ -2,7 +2,9 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <time.h>
 
+using namespace std;
 
 DWORD weChatWinAddress = 0;
 HWND globalHwnd;
@@ -89,4 +91,35 @@ wchar_t* StrToWchar(std::string str)
 	MultiByteToWideChar(CP_ACP, 0, str.c_str(), -1, wStr, strSize);
 	return wStr;
 	delete[] wStr;
+}
+
+
+
+LPCWSTR stringToLPCWSTR(std::string orig)
+{
+	size_t origsize = orig.length() + 1;
+	const size_t newsize = 100;
+	size_t convertedChars = 0;
+	wchar_t* wcstring = (wchar_t*)malloc(sizeof(wchar_t) * (orig.length() - 1));
+	mbstowcs_s(&convertedChars, wcstring, origsize, orig.c_str(), _TRUNCATE);
+
+	return wcstring;
+}
+
+
+string LPCWSTR2String(LPCWSTR lpcwszStr)
+{
+	string str;
+	DWORD dwMinSize = 0;
+	LPSTR lpszStr = NULL;
+	dwMinSize = WideCharToMultiByte(CP_OEMCP, NULL, lpcwszStr, -1, NULL, 0, NULL, FALSE);
+	if (0 == dwMinSize)
+	{
+		return FALSE;
+	}
+	lpszStr = new char[dwMinSize];
+	WideCharToMultiByte(CP_OEMCP, NULL, lpcwszStr, -1, lpszStr, dwMinSize, NULL, FALSE);
+	str = lpszStr;
+	delete[] lpszStr;
+	return str;
 }

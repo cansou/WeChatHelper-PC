@@ -118,6 +118,8 @@ string GetDllPath()
 		return "";
 	}
 	return string(DllPath);
+
+	
 }
 
 /**
@@ -130,7 +132,7 @@ VOID startWechat()
 	char debugInfo[0x1000] = { 0 };
 	string DllPath = GetDllPath();
 
-
+	//DllPath =  "C:\\workspaces\\Flower\\WeChatHelper-PC\\WeChatHelperPC\\Debug\\WeChatHelperDll.dll";
 	if (DllPath == "")
 	{
 		sprintf_s(debugInfo, "[Error] => %s => %s", DllPath.c_str(), "DLL不存在");
@@ -238,6 +240,7 @@ VOID InjectDll()
 	char debugInfo[0x1000] = { 0 };
 
 	string DllPath = GetDllPath();
+
 	if (DllPath == "")
 	{
 		sprintf_s(debugInfo, "[Error] => %s => %s", DllPath.c_str(), "DLL不存在");

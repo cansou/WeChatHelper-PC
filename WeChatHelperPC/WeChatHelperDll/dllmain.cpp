@@ -23,7 +23,6 @@ using namespace std;
 //声明函数
 VOID ShowDemoUI(HMODULE hModule);
 INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
-void SentTextMessage(HWND hwndDlg);
 LPCWSTR String2LPCWSTR(string text);
 string Dec2Hex(DWORD i);
 WCHAR* CharToWChar(char* s);
@@ -83,20 +82,6 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 		setGlobalHwnd(hwndDlg);
 		SetDlgItemText(hwndDlg, DEBUG_INFO, L"dll注入成功，已开始监听微信数据。");
 
-		//初始化消息接收list
-		LV_COLUMN msgPcol = { 0 };
-		LPCWSTR msgTitle[] = { L"类型",L"self",L"来源",L"发送者", L"字符串", L"详情" };
-		int msgCx[] = { 50,50,80,80,50,200 };
-		msgPcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
-		msgPcol.fmt = LVCFMT_LEFT;
-		for (unsigned int i = 0; i < size(msgTitle); i++) {
-			msgPcol.pszText = (LPWSTR)msgTitle[i];
-			msgPcol.cx = msgCx[i];
-			ListView_InsertColumn(GetDlgItem(hwndDlg, LIST_RECIEVE_MSG), i, &msgPcol);
-		}
-		LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(LIST_RECIEVE_MSG);
-
-
 		//// 登录状态
 		//HANDLE lThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)getLoginStatus, NULL, NULL, 0);
 		//if (lThread != 0) {
@@ -104,7 +89,7 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 		//}
 
 		// 接收消息
-		HANDLE hookThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RecieveMsgHook, NULL, NULL, 0);
+		HANDLE hookThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)HookWx, NULL, NULL, 0);
 		if (hookThread != 0) {
 			CloseHandle(hookThread);
 		}
@@ -179,37 +164,37 @@ struct StructWxid
 	DWORD fill2;
 };
 
-//将int转成16进制字符串
-string Dec2Hex(DWORD i)
-{
-	//定义字符串流
-	stringstream ioss;
-	//存放转化后字符
-	string s_temp;
-	//以十六制(大写)形式输出
-	ioss.fill('0');
-	ioss << setiosflags(ios::uppercase) << setw(8) << hex << i;
-	//以十六制(小写)形式输出//取消大写的设置
-	//ioss << resetiosflags(ios::uppercase) << hex << i;
-	ioss >> s_temp;
-	return "0x" + s_temp;
-}
+////将int转成16进制字符串
+//string Dec2Hex(DWORD i)
+//{
+//	//定义字符串流
+//	stringstream ioss;
+//	//存放转化后字符
+//	string s_temp;
+//	//以十六制(大写)形式输出
+//	ioss.fill('0');
+//	ioss << setiosflags(ios::uppercase) << setw(8) << hex << i;
+//	//以十六制(小写)形式输出//取消大写的设置
+//	//ioss << resetiosflags(ios::uppercase) << hex << i;
+//	ioss >> s_temp;
+//	return "0x" + s_temp;
+//}
 
-//把string 转换为 LPCWSTR
-LPCWSTR String2LPCWSTR(string text)
-{
-	//原型：
-	//typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
-	//typedef wchar_t WCHAR;
-
-	size_t size = text.length();
-	WCHAR* buffer = new WCHAR[size + 1];
-	MultiByteToWideChar(CP_ACP, 0, text.c_str(), -1, buffer, size + 1);
-
-	//确保以 '\0' 结尾
-	buffer[size] = 0;
-	return buffer;
-}
+////把string 转换为 LPCWSTR
+//LPCWSTR String2LPCWSTR(string text)
+//{
+//	//原型：
+//	//typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
+//	//typedef wchar_t WCHAR;
+//
+//	size_t size = text.length();
+//	WCHAR* buffer = new WCHAR[size + 1];
+//	MultiByteToWideChar(CP_ACP, 0, text.c_str(), -1, buffer, size + 1);
+//
+//	//确保以 '\0' 结尾
+//	buffer[size] = 0;
+//	return buffer;
+//}
 
 string WcharToString(WCHAR* wchar)
 {
@@ -222,77 +207,5 @@ string WcharToString(WCHAR* wchar)
 	WideCharToMultiByte(CP_OEMCP, NULL, wText, -1, psText, dwNum, NULL, FALSE);
 	// std::string赋值
 	return psText;
-}
-
-VOID SentTextMessage(HWND hwndDlg)
-{
-	string text = "";
-
-	DWORD callAddress_SendText = wxBaseAddress + 0xD0E62;
-
-
-	text = "Call地址:";
-	text.append(Dec2Hex(callAddress_SendText));
-	//text.append("wxid_4sy2barbyny712");
-
-	OutputDebugString(String2LPCWSTR(text));
-
-	//组装wxid数据
-	WCHAR wxid[50];
-	//UINT uINT = GetDlgItemText(hwndDlg, IDC_WXID, wxid, 50);
-	//if (uINT == 0)
-	//{
-	//	MessageBoxA(NULL, "请填写wxid", "错误", MB_OK | MB_ICONERROR);
-	//	return;
-	//}
-
-	text = "目标wxid:\t";
-	text.append(WcharToString(wxid));
-	OutputDebugString(String2LPCWSTR(text));
-
-	StructWxid structWxid = { 0 };
-	structWxid.pWxid = wxid;
-	structWxid.length = wcslen(wxid);
-	structWxid.maxLength = wcslen(wxid) * 2;
-
-	text = "微信ID长度:";
-	text.append(Dec2Hex(structWxid.length));
-	OutputDebugString(String2LPCWSTR(text));
-
-
-	//structWxid.Init();
-	//取wxid的地址
-	DWORD* asmWxid = (DWORD*)&structWxid.pWxid;
-
-
-	//组装发送的文本数据
-	WCHAR wxMsg[1024];
-	UINT uINT = GetDlgItemText(hwndDlg, TEXT_SEND_MSG, wxMsg, 1024);
-	if (uINT == 0)
-	{
-		MessageBoxA(NULL, "请填写要发送的文本", "错误", MB_OK | MB_ICONERROR);
-		return;
-	}
-	text = "发送内容:\t";
-	text.append(WcharToString(wxMsg));
-	OutputDebugString(String2LPCWSTR(text));
-
-	StructWxid structMessage = { 0 };
-	structMessage.pWxid = wxMsg;
-	structMessage.length = wcslen(wxMsg);
-	structMessage.maxLength = wcslen(wxMsg) * 2;
-
-	text = "发送内容长度:";
-	text.append(Dec2Hex(structMessage.length));
-	OutputDebugString(String2LPCWSTR(text));
-
-	//structMessage.Init();
-	//取msg的地址
-	DWORD* asmMsg = (DWORD*)&structMessage.pWxid;
-
-	//定义一个缓冲区
-	BYTE buff[0x81C] = { 0 };
-
-
 }
 
