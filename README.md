@@ -3,8 +3,9 @@
 ## 简介
 1. 环境：VS2019、MySql5.7。
 2. 只支持2.7.1.88版本。
-3. 保存文字消息到Mysql，修改MySqlTool.app中配置。表结构
-
+3. 第一次接触C++，第一版代码写的惨不忍睹。
+3. 只保存文字消息到Mysql，修改MySqlTool.app文件中配置，改成自己的MySql配置。
+4. 表结构：
 > CREATE TABLE `receive_msg` (
   `id` bigint(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `from_wxid` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '消息来源，好友ID、或群ID',
@@ -26,5 +27,12 @@
 2. 发送消息。
 3. 定时消息发送，自动回复等。
 4. 微信多开
-5. 其他
+5. 其他...
+
+## 参考资料
+1. 网易云课堂《X86软件逆向分析实战》
+2. https://github.com/codeByDog/pcWechat
+3. 还有很多提供帮助的朋友，不一一列举了。
+感谢各位大佬
+
 
