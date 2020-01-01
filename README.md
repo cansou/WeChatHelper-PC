@@ -33,6 +33,6 @@
 1. 网易云课堂《X86软件逆向分析实战》：https://study.163.com/course/courseMain.htm?courseId=1209042813
 2. https://github.com/codeByDog/pcWechat
 3. 还有很多提供帮助的朋友，不一一列举了。
-感谢各位大佬
+感谢各位大佬！！！
 
 
