@@ -2,10 +2,14 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+
+
 DWORD weChatWinAddress = 0;
 HWND globalHwnd;
 
-
+/*
+	获取WeChatWin基址
+ */
 DWORD getWeChatWinAddr()
 {
 	if (weChatWinAddress == 0)
@@ -28,6 +32,9 @@ HWND getGlobalHwnd()
 }
 
 
+/*
+	UnicodeToUtf8
+*/
 char* UnicodeToUtf8(const wchar_t* unicode)
 {
 	int len;
@@ -40,7 +47,9 @@ char* UnicodeToUtf8(const wchar_t* unicode)
 	return szUtf8;
 }
 
-
+/*
+	UTF8ToUnicode
+*/
 wchar_t* UTF8ToUnicode(const char* str)
 {
 	int    textlen = 0;

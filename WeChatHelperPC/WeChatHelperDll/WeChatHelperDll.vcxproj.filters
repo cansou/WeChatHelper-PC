@@ -13,16 +13,22 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="common">
-      <UniqueIdentifier>{0eb6fd0e-befe-4212-bb67-091062ff76d3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="userinfo">
       <UniqueIdentifier>{226ba723-ccd6-4774-aec3-e98535e6c3aa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="model">
+    <Filter Include="MySql">
+      <UniqueIdentifier>{786ec000-f2e3-4327-8ecf-ccfcb8d13303}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Socket">
+      <UniqueIdentifier>{1ed50371-1068-4dcc-bfcd-d0be72bc0116}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model">
       <UniqueIdentifier>{49e14c8c-b8a2-4df9-ac43-3a998d31764c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="receivemsg">
+    <Filter Include="Common">
+      <UniqueIdentifier>{0eb6fd0e-befe-4212-bb67-091062ff76d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ReceiveMsg">
       <UniqueIdentifier>{52564e4d-d2ef-4a92-aa54-8d8f6546a6ed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -36,17 +42,23 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="common.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="UserInfo.h">
       <Filter>userinfo</Filter>
     </ClInclude>
     <ClInclude Include="ReceiveMsg.h">
-      <Filter>receivemsg</Filter>
+      <Filter>ReceiveMsg</Filter>
     </ClInclude>
-    <ClInclude Include="struct.h">
-      <Filter>model</Filter>
+    <ClInclude Include="Utils.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="MySqlTool.h">
+      <Filter>MySql</Filter>
+    </ClInclude>
+    <ClInclude Include="StructInfo.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="Offset.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -56,14 +68,17 @@
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="common.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
     <ClCompile Include="UserInfo.cpp">
       <Filter>userinfo</Filter>
     </ClCompile>
     <ClCompile Include="ReceiveMsg.cpp">
-      <Filter>receivemsg</Filter>
+      <Filter>ReceiveMsg</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="MySqlTool.cpp">
+      <Filter>MySql</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

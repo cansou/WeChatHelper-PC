@@ -1,1 +1,1 @@
-Information* RecieveMsg();
+void RecieveMsgHook();

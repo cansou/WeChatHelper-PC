@@ -17,15 +17,6 @@
 #include <io.h>
 #include <string>
 
-// mysql
-#include <iostream>
-#include <mysql.h>
-#include <sstream>
-
-// socket
-#include<Windows.h>
-#include<WinSock2.h>
-#include<stdio.h>
 
 
 
@@ -51,11 +42,6 @@ BOOL CloseWeChat();
 VOID InjectDll();
 BOOL CheckInject(DWORD dwProcessid);
 VOID UnInjectDll();
-
-VOID InsertData();
-VOID StartSocket();
-
-
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -94,19 +80,17 @@ INT_PTR CALLBACK Dlgproc(
 	{
 		switch (wParam)
 		{
-
 		case BTN_INJECT:
 			InjectDll();
 			break;
 		case BTN_UN_INJECT:
-			//UnInjectDll();
-			InsertData();
+			UnInjectDll();
 			break;
-
-		case BTN_SOCKET:
-			//UnInjectDll();
-			StartSocket();
-
+		case BTN_START_WECHAT:
+			startWechat();
+			break;
+		case BTN_CLOSE_WECHAT:
+			CloseWeChat();
 			break;
 		default:
 			break;
@@ -254,9 +238,6 @@ VOID InjectDll()
 	char debugInfo[0x1000] = { 0 };
 
 	string DllPath = GetDllPath();
-	//DllPath = "C:\\workspaces\\FlowerPC\\FlowerHelperDll\\FlowerHelperDll\\Debug\\FlowerHelperDll.dll";
-
-	//DllPath = "C:\\workspaces\\learn\\MySqlDllTest\\Debug\\MySqlDllTest.dll";
 	if (DllPath == "")
 	{
 		sprintf_s(debugInfo, "[Error] => %s => %s", DllPath.c_str(), "DLL不存在");
@@ -454,130 +435,3 @@ VOID UnInjectDll()
 	return;
 }
 
-
-VOID InsertData() {
-
-
-	// 初始化mysql上下文
-	MYSQL mysql;
-	mysql_init(&mysql);
-
-	const char* host = "47.99.120.241";
-	const char* user = "root";
-	const char* pasw = "123456";
-	const char* db = "a16";
-
-
-	// 设置超时时间，设定超时3秒
-	int to = 3;
-	int re = mysql_options(&mysql, MYSQL_OPT_CONNECT_TIMEOUT, &to);
-	if (re != 0) {
-		cout << "mysql connect timeout !" << mysql_error(&mysql) << endl;
-	}
-
-	// 设置自动重连
-	int recon = 1;
-	re = mysql_options(&mysql, MYSQL_OPT_RECONNECT, &recon);
-	if (re != 0) {
-		cout << "mysql connect timeout !" << mysql_error(&mysql) << endl;
-	}
-
-
-	// 连接数据库
-	if (!mysql_real_connect(&mysql, host, user, pasw, db, 3306, 0, 0)) {
-		cout << "mysql connect failed!" << mysql_error(&mysql) << endl;
-	}
-	else
-	{
-		cout << "mysql connect" << host << "success! " << endl;
-	}
-
-
-
-	string sql = "";
-
-	// 插入数据
-	stringstream ss;
-	ss << "insert `user` (`id`,`tenant_id`,`name`)values(12,1, 'ja')";
-	sql = ss.str();
-
-	re = mysql_query(&mysql, sql.c_str());
-	if (re == 0)
-	{
-		int count = mysql_affected_rows(&mysql);
-		cout << "mysql_affected_rows " << count << " id =" << mysql_insert_id(&mysql) << endl;
-	}
-	else
-	{
-		cout << "insert failed!" << mysql_error(&mysql) << endl;
-	}
-
-
-	// 断开连接，释放内存
-	mysql_close(&mysql);
-	mysql_library_end();
-
-}
-
-
-
-VOID StartSocket() {
-
-	char debugInfo[0x1000] = { 0 };
-
-	//启动Windows socket2.X环境
-	WORD ver = MAKEWORD(2, 2);
-	WSADATA dat;
-	//启动windows中socket网络环境
-	WSAStartup(ver, &dat);
-
-	// 编写网络通信代码
-
-	//用socket API建立简易TCP客户端，需要4个步骤：
-	//	1. 建立一个socket
-	SOCKET _sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (INVALID_SOCKET == _sock) {
-		sprintf_s(debugInfo, "[Error] => %s", "错误，建立socket失败...");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-		return;
-	}
-	else
-	{
-		sprintf_s(debugInfo, "[Success] => %s", "连接服务器成功");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-	}
-
-	//	2. 连接服务器 connect
-	sockaddr_in _sin = {};
-	_sin.sin_family = AF_INET;
-	_sin.sin_port = htons(4567);
-	_sin.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-	int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
-	if (SOCKET_ERROR == ret) {
-		sprintf_s(debugInfo, "[Error] => %s", "错误，连接socket失败");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-		return;
-	}
-	else {
-		sprintf_s(debugInfo, "[Success] => %s", "连接socket成功");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-	}
-
-	//	3. 接收服务器信息 recv
-	// 缓冲区256字节
-	char recvBuf[256] = {};
-	int nlen = recv(_sock, recvBuf, 256, 0);
-	// 如果长度大于0，表示有数据
-	if (nlen > 0) {
-		//printf("接收到数据：%s", recvBuf);
-		sprintf_s(debugInfo, "[socket消息] => %s", recvBuf);
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-
-	}
-
-	//	4.关闭socket closesocket
-	closesocket(_sock);
-
-	WSACleanup();
-	// 让程序暂停
-}

@@ -1,5 +1,7 @@
 // dllmain.cpp : 定义 DLL 应用程序的入口点。
 
+#pragma comment(lib,"ws2_32.lib")
+//#include <Windows.h>
 #include "pch.h"
 #include "resource.h"
 #include "shellapi.h"
@@ -9,23 +11,12 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
-#include "struct.h"
+#include "StructInfo.h"
 #include "UserInfo.h"
-
-//socket
-#include<Windows.h>
-#include<WinSock2.h>
-#include<stdio.h>
-#include <thread>
-
-
-//receive 
 #include "receivemsg.h"
-
-
-//只有windows下才可以这么写，别的平台需要增加配置项
-#pragma comment(lib,"ws2_32.lib")
-
+#include "MySqlTool.h"
+#include "Utils.h"
+#include <CommCtrl.h>
 
 using namespace std;
 
@@ -37,16 +28,8 @@ LPCWSTR String2LPCWSTR(string text);
 string Dec2Hex(DWORD i);
 WCHAR* CharToWChar(char* s);
 
-void startSocket();
-
 //定义变量
 DWORD wxBaseAddress = 0;
-
-
-
-
-
-
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -96,7 +79,39 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 	switch (uMsg)
 	{
 	case WM_INITDIALOG:
+	{
+		setGlobalHwnd(hwndDlg);
+		SetDlgItemText(hwndDlg, DEBUG_INFO, L"dll注入成功，已开始监听微信数据。");
+
+		//初始化消息接收list
+		LV_COLUMN msgPcol = { 0 };
+		LPCWSTR msgTitle[] = { L"类型",L"self",L"来源",L"发送者", L"字符串", L"详情" };
+		int msgCx[] = { 50,50,80,80,50,200 };
+		msgPcol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT;
+		msgPcol.fmt = LVCFMT_LEFT;
+		for (unsigned int i = 0; i < size(msgTitle); i++) {
+			msgPcol.pszText = (LPWSTR)msgTitle[i];
+			msgPcol.cx = msgCx[i];
+			ListView_InsertColumn(GetDlgItem(hwndDlg, LIST_RECIEVE_MSG), i, &msgPcol);
+		}
+		LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(LIST_RECIEVE_MSG);
+
+
+		//// 登录状态
+		//HANDLE lThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)getLoginStatus, NULL, NULL, 0);
+		//if (lThread != 0) {
+		//	CloseHandle(lThread);
+		//}
+
+		// 接收消息
+		HANDLE hookThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RecieveMsgHook, NULL, NULL, 0);
+		if (hookThread != 0) {
+			CloseHandle(hookThread);
+		}
 		break;
+	}
+
+		
 
 	case WM_CLOSE:
 		//关闭窗口事件
@@ -104,61 +119,36 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 		break;
 	case WM_COMMAND:
 
-		//发送消息
-		if (wParam == BTN_SEND_MSG)
+		// 用户信息
+		if (wParam == BTN_USERINFO)
 		{
-			// OutputDebugString(TEXT("发送消息按钮被点击"));
-			//SentTextMessage(hwndDlg);
-			wchar_t str[0x1000] = { 0,1,2 };
-			SetDlgItemText(hwndDlg, TEXT_MY_INFO, str);
-
-
+			if (isLogin() == 0)
+			{
+				SetDlgItemText(hwndDlg, TEXT_MY_INFO, L"请先登录微信");
+			}
+			else
+			{
+				Information* myInfo = GetMyInfo();
+				wchar_t str[0x1000] = { 0 };
+				swprintf_s(str,
+					L"微信ID：%s\r\n账号：%s\r\n昵称：%s\r\n设备：%s\r\n手机号：%s\r\n邮箱：%s\r\n性别：%s\r\n国籍：%s\r\n省份：%s\r\n城市：%s\r\n签名：%s\r\n头像：%s",
+					myInfo->wxid,
+					myInfo->account,
+					myInfo->nickname,
+					myInfo->device,
+					myInfo->phone,
+					myInfo->email,
+					myInfo->sex,
+					myInfo->nation,
+					myInfo->province,
+					myInfo->city,
+					myInfo->signName,
+					myInfo->header);
+				SetDlgItemText(hwndDlg, TEXT_MY_INFO, str);
+			}
 		}
-		//接收消息
-		if (wParam == BTN_RECE_MSG)
-		{
-			Information* myInfo = RecieveMsg();
-			wchar_t str[0x1000] = { 0 };
-			swprintf_s(str,
-				L"微信ID：%s\r\n账号：%s\r\n昵称：%s\r\n设备：%s\r\n手机号：%s\r\n邮箱：%s\r\n性别：%s\r\n国籍：%s\r\n省份：%s\r\n城市：%s\r\n签名：%s\r\n头像：%s",
-				myInfo->wxid,
-				myInfo->account,
-				myInfo->nickname,
-				myInfo->device,
-				myInfo->phone,
-				myInfo->email,
-				myInfo->sex,
-				myInfo->nation,
-				myInfo->province,
-				myInfo->city,
-				myInfo->signName,
-				myInfo->header);
-			SetDlgItemText(hwndDlg, TEXT_RECEIVE_MSG, str);
 
-
-		}
-		//登录
-		if (wParam == BTN_LOGIN)
-		{
-			OutputDebugString(TEXT("自己的微信ID按钮被点击："));
-			Information* myInfo = GetMyInfo();
-			wchar_t str[0x1000] = { 0 };
-			swprintf_s(str,
-				L"微信ID：%s\r\n账号：%s\r\n昵称：%s\r\n设备：%s\r\n手机号：%s\r\n邮箱：%s\r\n性别：%s\r\n国籍：%s\r\n省份：%s\r\n城市：%s\r\n签名：%s\r\n头像：%s",
-				myInfo->wxid,
-				myInfo->account,
-				myInfo->nickname,
-				myInfo->device,
-				myInfo->phone,
-				myInfo->email,
-				myInfo->sex,
-				myInfo->nation,
-				myInfo->province,
-				myInfo->city,
-				myInfo->signName,
-				myInfo->header);
-			SetDlgItemText(hwndDlg, TEXT_MY_INFO, str);
-		}
+		break;
 	default:
 		break;
 	}
@@ -306,92 +296,3 @@ VOID SentTextMessage(HWND hwndDlg)
 
 }
 
-
-
-void startSocket() {
-
-	HWND   hwnd = NULL;
-
-	char debugInfo[0x1000] = { 0 };
-
-	//启动Windows socket2.X环境
-	WORD ver = MAKEWORD(2, 2);
-	WSADATA dat;
-	//启动windows中socket网络环境
-	WSAStartup(ver, &dat);
-
-	// 编写网络通信代码
-
-	//用socket API建立简易TCP服务端，需要6个步骤：
-	//	1. 建立一个socket。 
-	// IPV4，流，TCP的socket
-	SOCKET _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	//	2. 绑定接受客户端连接的端口
-	SOCKADDR_IN _sin = {};
-	_sin.sin_family = AF_INET;
-	_sin.sin_port = htons(4567);
-	_sin.sin_addr.S_un.S_addr = INADDR_ANY; //inet_addr("127.0.0.1");
-
-
-	if (SOCKET_ERROR == bind(_sock, (SOCKADDR*)&_sin, sizeof(_sin))) {
-		// 错误处理
-		sprintf_s(debugInfo, "[Error] => %s", "绑定网络端口失败...");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-		return;
-	}
-	else {
-		MessageBox(NULL, L"绑定网络端口成功", L"错误", MB_OK);
-		sprintf_s(debugInfo, "[Success] => %s", "绑定网络端口成功...");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-	};
-
-	//	3. 监听网络端口。最大等待数是5.
-	if (SOCKET_ERROR == listen(_sock, 5)) {
-		MessageBox(NULL, L"监听网络端口失败", L"错误", MB_OK);
-		sprintf_s(debugInfo, "[Error] => %s", "监听网络端口失败...");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-		return;
-	}
-	else
-	{
-		MessageBox(NULL, L"监听网络端口成功", L"错误", MB_OK);
-		sprintf_s(debugInfo, "[Success] => %s", "监听网络端口成功...");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-
-	};
-
-	//	4. 等待接收客户端连接 
-	SOCKADDR_IN clientAddr;
-	int nAddrLen = sizeof(SOCKADDR_IN);
-	SOCKET _cSock = INVALID_SOCKET;
-
-	// 加入循环，多个客户端连接
-	char msgBuf[] = "Hello i am server.";
-
-	MessageBox(NULL, L"before 客户端连接", L"错误", MB_OK);
-	while (true) {
-		// 返回socket接收的长度
-		_cSock = accept(_sock, (sockaddr*)&clientAddr, &nAddrLen);
-		if (INVALID_SOCKET == _cSock) {
-			MessageBox(NULL, L"接受到无效客户端socket", L"错误", MB_OK);
-			sprintf_s(debugInfo, "[Error] => %s", "接受到无效客户端socket...");
-			SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-			return;
-		}
-		MessageBox(NULL, L"新客户端加入", L"错误", MB_OK);
-		//printf("新客户端加入：ip = %s \n", inet_ntoa(clientAddr.sin_addr));
-		sprintf_s(debugInfo, "[Success] => %s", "新客户端加入");
-		SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
-
-		//	5. 向客户端发送一条数据 
-		send(_cSock, msgBuf, strlen(msgBuf) + 1, 0);
-
-	}
-
-	MessageBox(NULL, L"guanbi ", L"错误", MB_OK);
-	//	6. 关闭socket 
-	closesocket(_sock);
-	WSACleanup();
-
-}

@@ -1,9 +1,32 @@
+#include <Windows.h>
 #include "pch.h"
-#include "common.h"
+#include "Utils.h"
 #include <Shlwapi.h>
-#include "struct.h"
+#include "StructInfo.h"
+#include "Offset.h"
+#include "resource.h"
+
+using namespace std;
+
 #pragma comment(lib,"Shlwapi.lib")
 
+int isLogin()
+{
+	return (int) * (int*)(getWeChatWinAddr() + ISLOGIN);
+}
+
+void getLoginStatus()
+{
+	if (getWeChatWinAddr() != 0)
+	{
+		SetDlgItemText(getGlobalHwnd(), LOGIN_STATUS, isLogin() == 0 ? L"未登录" : L"已登录");
+	}
+	Sleep(500);
+	HANDLE lThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)getLoginStatus, NULL, NULL, 0);
+	if (lThread != 0) {
+		CloseHandle(lThread);
+	}
+}
 
 Information* GetMyInfo()
 {
