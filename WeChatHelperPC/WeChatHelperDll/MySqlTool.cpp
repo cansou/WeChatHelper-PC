@@ -23,8 +23,7 @@ void InsertData(std::string fromWxid, std::string senderWxid, std::string conten
 	MYSQL mysql;
 	mysql_init(&mysql);
 
-	//修改Mysql配置
-	const char* host = "localhost";
+	const char* host = "47.99.120.241";
 	const char* user = "root";
 	const char* pasw = "123456";
 	const char* db = "a16";
