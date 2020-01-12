@@ -73,8 +73,8 @@ void InsertData(std::string fromWxid, std::string senderWxid, std::string conten
 
 	sql = ss.str();
 
-	SetDlgItemText(getGlobalHwnd(), DEBUG_INFO, stringToLPCWSTR(sql));
 
+	mysql_set_character_set(&mysql, "utf8");
 	re = mysql_query(&mysql, sql.c_str());
 	if (re == 0)
 	{

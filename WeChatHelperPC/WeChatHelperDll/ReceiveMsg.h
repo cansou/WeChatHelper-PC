@@ -1,2 +1,1 @@
-//void RecieveMsgHook();
 void HookWx();
