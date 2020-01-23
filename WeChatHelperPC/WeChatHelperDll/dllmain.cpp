@@ -1,6 +1,8 @@
 // dllmain.cpp : 定义 DLL 应用程序的入口点。
 
+
 #pragma comment(lib,"ws2_32.lib")
+
 //#include <Windows.h>
 #include "pch.h"
 #include "resource.h"
@@ -18,7 +20,15 @@
 #include "Utils.h"
 #include <CommCtrl.h>
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+// socket
+#include "EasyTcpClient.hpp"
+#include<thread>
+
 using namespace std;
+
+
 
 //声明函数
 VOID ShowDemoUI(HMODULE hModule);
@@ -26,9 +36,14 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 LPCWSTR String2LPCWSTR(string text);
 string Dec2Hex(DWORD i);
 WCHAR* CharToWChar(char* s);
+void cmdThread();
+void ConnSocket();
+
 
 //定义变量
 DWORD wxBaseAddress = 0;
+bool g_bRun = true;
+HWND   hwnd;
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -82,6 +97,20 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 		setGlobalHwnd(hwndDlg);
 		SetDlgItemText(hwndDlg, DEBUG_INFO, L"dll注入成功，已开始监听微信数据。");
 
+
+		cout << "hello world" << endl;
+
+		while (true)
+		{
+
+			time_t mytime = time(0);
+			wstring mydata = TEXT("\nC++ Time");
+			mydata.append(to_wstring(mytime));
+			OutputDebugString(mydata.c_str());
+			Sleep(1000);
+
+		}
+
 		//// 登录状态
 		//HANDLE lThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)getLoginStatus, NULL, NULL, 0);
 		//if (lThread != 0) {
@@ -132,7 +161,17 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 				SetDlgItemText(hwndDlg, TEXT_MY_INFO, str);
 			}
 		}
+		break;
+		if (wParam == BTN_SOCKET)
+		{
+			//std::thread t1(ConnSocket);
+			//t1.detach();
 
+			setGlobalHwnd(hwndDlg);
+			SetDlgItemText(hwndDlg, DEBUG_INFO, L"socket。");
+
+
+		}
 		break;
 	default:
 		break;
@@ -209,3 +248,72 @@ string WcharToString(WCHAR* wchar)
 	return psText;
 }
 
+
+
+void cmdThread()
+{
+	while (true)
+	{
+		char cmdBuf[256] = {};
+		//scanf("%s", cmdBuf);
+		if (0 == strcmp(cmdBuf, "exit"))
+		{
+			g_bRun = false;
+			printf("退出cmdThread线程\n");
+			break;
+		}
+		else {
+			printf("不支持的命令。\n");
+		}
+	}
+}
+
+
+void ConnSocket() {
+
+	char debugInfo[0x1000] = { 0 };
+	sprintf_s(debugInfo, "[Success] => %s", "socket连接成功");
+	SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
+
+	////const int cCount = FD_SETSIZE - 1;
+	//const int cCount = 1;
+	//EasyTcpClient* client[cCount];
+
+	//for (int n = 0; n < cCount; n++)
+	//{
+	//	client[n] = new EasyTcpClient();
+	//}
+	//for (int n = 0; n < cCount; n++)
+	//{
+	//	client[n]->Connect("127.0.0.1", 4567);
+	//}
+
+	////启动UI线程
+	//std::thread t1(cmdThread);
+	//t1.detach();
+
+	//Login login;
+	//strcpy_s(login.userName, "lyd");
+	//strcpy_s(login.PassWord, "lydmm");
+	//while (g_bRun)
+	//{
+	//	for (int n = 0; n < cCount; n++)
+	//	{
+	//		client[n]->SendData(&login);
+	//		client[n]->OnRun();
+	//	}
+
+	//	//printf("空闲时间处理其它业务..\n");
+	//	//SetDlgItemText(hwndDlg, TEXT_MY_INFO, L"socket..");
+
+	//	char debugInfo[0x1000] = { 0 };
+	//	sprintf_s(debugInfo, "[Success] => %s", "socket连接成功");
+	//	SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
+	//	Sleep(1000);
+	//}
+
+	//for (int n = 0; n < cCount; n++)
+	//{
+	//	client[n]->Close();
+	//}
+}

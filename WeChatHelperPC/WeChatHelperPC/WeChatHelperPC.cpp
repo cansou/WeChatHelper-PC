@@ -1,5 +1,6 @@
 // WeChatHelperPC.cpp : 定义应用程序的入口点。
 //
+#define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 #define  _WINSOCK_DEPRECATED_NO_WARNINGS 
 
@@ -18,9 +19,10 @@
 #include <string>
 
 
+// socket
+#include "EasyTcpServer.hpp"
+#include<thread>
 
-
-//只有windows下才可以这么写，别的平台需要增加配置项
 #pragma comment(lib,"ws2_32.lib")
 
 using namespace std;
@@ -42,13 +44,15 @@ BOOL CloseWeChat();
 VOID InjectDll();
 BOOL CheckInject(DWORD dwProcessid);
 VOID UnInjectDll();
-
+void StartSocket();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
+
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	HANDLE hObject = ::CreateMutex(NULL, FALSE, L"WeChatBot_Mutex");
@@ -92,6 +96,15 @@ INT_PTR CALLBACK Dlgproc(
 		case BTN_CLOSE_WECHAT:
 			CloseWeChat();
 			break;
+		case BTN_SOCKET:
+		{
+			std::thread t1(StartSocket);
+			t1.detach();
+		
+		}
+			
+		break;
+
 		default:
 			break;
 		}
@@ -111,6 +124,7 @@ INT_PTR CALLBACK Dlgproc(
  */
 string GetDllPath()
 {
+
 	char DllPath[0x1000] = { 0 };
 	sprintf_s(DllPath, "%s\\%ws", _getcwd(NULL, 0), dllName);
 	if (_access(DllPath, 0) == -1)
@@ -438,3 +452,48 @@ VOID UnInjectDll()
 	return;
 }
 
+
+
+// socket开始
+
+bool g_bRun = true;
+void cmdThread()
+{
+	while (true)
+	{
+		char cmdBuf[256] = {};
+		scanf("%s", cmdBuf);
+		if (0 == strcmp(cmdBuf, "exit"))
+		{
+			g_bRun = false;
+			printf("退出cmdThread线程\n");
+			break;
+		}
+		else {
+			printf("不支持的命令。\n");
+		}
+	}
+}
+void StartSocket() {
+
+	EasyTcpServer server;
+	server.InitSocket();
+	server.Bind(nullptr, 4567);
+	server.Listen(5);
+
+	//启动UI线程
+	std::thread t2(cmdThread);
+	t2.detach();
+
+	while (g_bRun)
+	{
+		server.OnRun();
+	}
+	server.Close();
+	printf("已退出。\n");
+
+	char debugInfo[0x1000] = { 0 };
+	sprintf_s(debugInfo, "[Success] => %s", "socket启动成功");
+	SetDlgItemTextA(hwnd, DEBUG_INFO, debugInfo);
+
+}

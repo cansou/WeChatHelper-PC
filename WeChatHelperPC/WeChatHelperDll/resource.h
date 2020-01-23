@@ -15,6 +15,9 @@
 #define FLAG_HOOK_MSG                   1017
 #define TEXT_RECIEVE_MSG                1018
 #define IDC_EDIT1                       1019
+#define BTN_SOCKET_REVE                 1020
+#define IDC_BUTTON2                     1021
+#define BTN_SOCKET_SEND                 1021
 
 // Next default values for new objects
 // 
@@ -22,7 +25,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

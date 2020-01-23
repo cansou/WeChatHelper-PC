@@ -161,7 +161,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="EasyTcpClient.hpp" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="MessageHeader.hpp" />
     <ClInclude Include="MySqlTool.h" />
     <ClInclude Include="Offset.h" />
     <ClInclude Include="StructInfo.h" />

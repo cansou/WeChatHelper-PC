@@ -60,6 +60,12 @@
     <ClInclude Include="Offset.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="EasyTcpClient.hpp">
+      <Filter>Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="MessageHeader.hpp">
+      <Filter>Socket</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
