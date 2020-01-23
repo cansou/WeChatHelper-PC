@@ -1,6 +1,8 @@
-// dllmain.cpp : 定义 DLL 应用程序的入口点。
+// WeChatHelperPC.cpp : 定义应用程序的入口点。
+//
+#define WIN32_LEAN_AND_MEAN
+#define  _WINSOCK_DEPRECATED_NO_WARNINGS 
 
-#pragma comment(lib,"ws2_32.lib")
 //#include <Windows.h>
 #include "pch.h"
 #include "resource.h"
@@ -17,6 +19,11 @@
 #include "MySqlTool.h"
 #include "Utils.h"
 #include <CommCtrl.h>
+
+#include "EasyTcpServer.hpp"
+#include<thread>
+
+#pragma comment(lib,"ws2_32.lib")
 
 using namespace std;
 
@@ -39,6 +46,8 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 	{
+		CELLLog::Instance().setLogPath("WeChatHelper.txt", "a");
+
 		HANDLE hANDLE = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowDemoUI, hModule, NULL, 0);
 		if (hANDLE != 0)
 		{
