@@ -69,7 +69,7 @@ public:
 				fprintf(pLog->_logFile, "%s", pStr);
 				fflush(pLog->_logFile);
 			}
-			printf("%s", pStr);
+			//printf("%s", pStr);
 		});
 	}
 
@@ -89,7 +89,7 @@ public:
 				fprintf(pLog->_logFile, pformat, args...);
 				fflush(pLog->_logFile);
 			}
-			printf(pformat, args...);
+			//printf(pformat, args...);
 		});
 	}
 private:

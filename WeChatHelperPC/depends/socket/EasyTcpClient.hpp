@@ -1,19 +1,34 @@
-﻿#ifndef _EasyTcpClient_hpp_
+#ifndef _EasyTcpClient_hpp_
 #define _EasyTcpClient_hpp_
 
-#include"CELL.hpp"
-#include"CELLNetWork.hpp"
-#include"MessageHeader.hpp"
-#include"CELLClient.hpp"
+#ifdef _WIN32
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define WIN32_LEAN_AND_MEAN
+#include<windows.h>
+#include<WinSock2.h>
+
+#pragma comment(lib,"ws2_32.lib")
+#else
+#include<unistd.h> //uni std
+#include<arpa/inet.h>
+#include<string.h>
+
+#define SOCKET int
+#define INVALID_SOCKET  (SOCKET)(~0)
+#define SOCKET_ERROR            (-1)
+#endif
+#include <stdio.h>
+#include "MessageHeader.hpp"
 
 class EasyTcpClient
 {
+	SOCKET _sock;
 public:
 	EasyTcpClient()
 	{
-		_isConnect = false;
+		_sock = INVALID_SOCKET;
 	}
-	
+
 	virtual ~EasyTcpClient()
 	{
 		Close();
@@ -21,28 +36,31 @@ public:
 	//初始化socket
 	void InitSocket()
 	{
-		CELLNetWork::Init();
-
-		if (_pClient)
+#ifdef _WIN32
+		//启动Windows socket 2.x环境
+		WORD ver = MAKEWORD(2, 2);
+		WSADATA dat;
+		WSAStartup(ver, &dat);
+#endif
+		if (INVALID_SOCKET != _sock)
 		{
-			CELLLog::Info("warning, initSocket close old socket<%d>...\n", (int)_pClient->sockfd());
+			printf("<socket=%d>关闭旧连接...\n", _sock);
 			Close();
 		}
-		SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (INVALID_SOCKET == sock)
+		_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (INVALID_SOCKET == _sock)
 		{
-			CELLLog::Info("error, create socket failed...\n");
+			printf("错误，建立Socket失败...\n");
 		}
 		else {
-			//CELLLog::Info("create socket<%d> success...\n", (int)sock);
-			_pClient = new CELLClient(sock);
+			printf("建立Socket=<%d>成功...\n", _sock);
 		}
 	}
 
 	//连接服务器
-	int Connect(const char* ip,unsigned short port)
+	int Connect(const char* ip, unsigned short port)
 	{
-		if (!_pClient)
+		if (INVALID_SOCKET == _sock)
 		{
 			InitSocket();
 		}
@@ -55,15 +73,14 @@ public:
 #else
 		_sin.sin_addr.s_addr = inet_addr(ip);
 #endif
-		//CELLLog::Info("<socket=%d> connecting <%s:%d>...\n", (int)_pClient->sockfd(), ip, port);
-		int ret = connect(_pClient->sockfd(), (sockaddr*)&_sin, sizeof(sockaddr_in));
+		printf("<socket=%d>正在连接服务器<%s:%d>...\n", _sock, ip, port);
+		int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
 		if (SOCKET_ERROR == ret)
 		{
-			CELLLog::Info("<socket=%d> connect <%s:%d> failed...\n", (int)_pClient->sockfd(), ip, port);
+			printf("<socket=%d>错误，连接服务器<%s:%d>失败...\n", _sock, ip, port);
 		}
 		else {
-			_isConnect = true;
-			//CELLLog::Info("<socket=%d> connect <%s:%d> success...\n", (int)_pClient->sockfd(), ip, port);
+			printf("<socket=%d>连接服务器<%s:%d>成功...\n", _sock, ip, port);
 		}
 		return ret;
 	}
@@ -71,60 +88,44 @@ public:
 	//关闭套节字closesocket
 	void Close()
 	{
-		if (_pClient)
+		if (_sock != INVALID_SOCKET)
 		{
-			delete _pClient;
-			_pClient = nullptr;
+#ifdef _WIN32
+			closesocket(_sock);
+			//清除Windows socket环境
+			WSACleanup();
+#else
+			close(_sock);
+#endif
+			_sock = INVALID_SOCKET;
 		}
-		_isConnect = false;
 	}
 
 	//处理网络消息
+	int _nCount = 0;
 	bool OnRun()
 	{
 		if (isRun())
 		{
-			SOCKET _sock = _pClient->sockfd();
-
-			fd_set fdRead;
-			FD_ZERO(&fdRead);
-			FD_SET(_sock, &fdRead);
-
-			fd_set fdWrite;
-			FD_ZERO(&fdWrite);
-
-			timeval t = { 0,1 };
-			int ret = 0;
-			if (_pClient->needWrite())
-			{
-				FD_SET(_sock, &fdWrite);
-				ret = select(_sock + 1, &fdRead, &fdWrite, nullptr, &t);
-			}else {
-				ret = select(_sock + 1, &fdRead, nullptr, nullptr, &t);
-			}
-
+			fd_set fdReads;
+			FD_ZERO(&fdReads);
+			FD_SET(_sock, &fdReads);
+			timeval t = { 0,0 };
+			int ret = select(_sock + 1, &fdReads, 0, 0, &t);
+			//printf("select ret=%d count=%d\n", ret, _nCount++);
 			if (ret < 0)
 			{
-				CELLLog::Info("error,<socket=%d>OnRun.select exit\n", (int)_sock);
+				printf("<socket=%d>select任务结束1\n", _sock);
 				Close();
 				return false;
 			}
-
-			if (FD_ISSET(_sock, &fdRead))
+			if (FD_ISSET(_sock, &fdReads))
 			{
+				FD_CLR(_sock, &fdReads);
+
 				if (-1 == RecvData(_sock))
 				{
-					CELLLog::Info("error,<socket=%d>OnRun.select RecvData exit\n", (int)_sock);
-					Close();
-					return false;
-				}
-			}
-
-			if (FD_ISSET(_sock, &fdWrite))
-			{
-				if (-1 == _pClient->SendDataReal())
-				{
-					CELLLog::Info("error,<socket=%d>OnRun.select SendDataReal exit\n", (int)_sock);
+					printf("<socket=%d>select任务结束2\n", _sock);
 					Close();
 					return false;
 				}
@@ -137,39 +138,108 @@ public:
 	//是否工作中
 	bool isRun()
 	{
-		return _pClient && _isConnect;
+		return _sock != INVALID_SOCKET;
 	}
+	//缓冲区最小单元大小
+#ifndef RECV_BUFF_SZIE
+#define RECV_BUFF_SZIE 102400
+#endif // !RECV_BUFF_SZIE
+	//第二缓冲区 消息缓冲区
+	char _szMsgBuf[RECV_BUFF_SZIE * 10] = {};
+	//消息缓冲区的数据尾部位置
+	int _lastPos = 0;
+	//接收缓冲区
+	char _szRecv[RECV_BUFF_SZIE] = {};
 
 	//接收数据 处理粘包 拆分包
 	int RecvData(SOCKET cSock)
 	{
-		//接收客户端数据
-		int nLen = _pClient->RecvData();
-		if (nLen > 0)
+		// 5 接收数据
+		int nLen = (int)recv(cSock, _szRecv, RECV_BUFF_SZIE, 0);
+		//printf("nLen=%d\n", nLen);
+		if (nLen <= 0)
 		{
-			//循环 判断是否有消息需要处理
-			while (_pClient->hasMsg())
+			printf("<socket=%d>与服务器断开连接，任务结束。\n", cSock);
+			return -1;
+		}
+		//将收取到的数据拷贝到消息缓冲区
+		memcpy(_szMsgBuf + _lastPos, _szRecv, nLen);
+		//消息缓冲区的数据尾部位置后移
+		_lastPos += nLen;
+
+		// 解决少包和粘包
+		//判断消息缓冲区的数据长度大于消息头DataHeader长度
+		while (_lastPos >= sizeof(DataHeader))
+		{
+			//这时就可以知道当前消息的长度
+			DataHeader* header = (DataHeader*)_szMsgBuf;
+			//判断消息缓冲区的数据长度大于消息长度
+			if (_lastPos >= header->dataLength)
 			{
+				//消息缓冲区剩余未处理数据的长度
+				int nSize = _lastPos - header->dataLength;
 				//处理网络消息
-				OnNetMsg(_pClient->front_msg());
-				//移除消息队列（缓冲区）最前的一条数据
-				_pClient->pop_front_msg();
+				OnNetMsg(header);
+				//将消息缓冲区剩余未处理数据前移
+				memcpy(_szMsgBuf, _szMsgBuf + header->dataLength, nSize);
+				//消息缓冲区的数据尾部位置前移
+				_lastPos = nSize;
+			}
+			else {
+				//消息缓冲区剩余数据不够一条完整消息
+				break;
 			}
 		}
-		return nLen;
+		return 0;
 	}
 
 	//响应网络消息
-	virtual void OnNetMsg(netmsg_DataHeader* header) = 0;
+	virtual void OnNetMsg(DataHeader* header)
+	{
+		switch (header->cmd)
+		{
+		case CMD_LOGIN_RESULT:
+		{
+
+			LoginResult* login = (LoginResult*)header;
+			printf("<socket=%d>收到服务端消息：CMD_LOGIN_RESULT,数据长度：%d\n", _sock, login->dataLength);
+		}
+		break;
+		case CMD_LOGOUT_RESULT:
+		{
+			LogoutResult* logout = (LogoutResult*)header;
+			printf("<socket=%d>收到服务端消息：CMD_LOGOUT_RESULT,数据长度：%d\n", _sock, logout->dataLength);
+		}
+		break;
+		case CMD_NEW_USER_JOIN:
+		{
+			NewUserJoin* userJoin = (NewUserJoin*)header;
+			printf("<socket=%d>收到服务端消息：CMD_NEW_USER_JOIN,数据长度：%d\n", _sock, userJoin->dataLength);
+		}
+		break;
+		case CMD_ERROR:
+		{
+			printf("<socket=%d>收到服务端消息：CMD_ERROR,数据长度：%d\n", _sock, header->dataLength);
+		}
+		break;
+		default:
+		{
+			printf("<socket=%d>收到未定义消息,数据长度：%d\n", _sock, header->dataLength);
+		}
+		}
+	}
 
 	//发送数据
-	int SendData(netmsg_DataHeader* header)
+	int SendData(DataHeader* header)
 	{
-		return _pClient->SendData(header);
+		if (isRun() && header)
+		{
+			return send(_sock, (const char*)header, header->dataLength, 0);
+		}
+		return SOCKET_ERROR;
 	}
-protected:
-	CELLClient* _pClient = nullptr;
-	bool _isConnect = false;
+private:
+
 };
 
 #endif

@@ -20,8 +20,11 @@
 #include "Utils.h"
 #include <CommCtrl.h>
 
-#include "EasyTcpServer.hpp"
+// socket
+#include"EasyTcpClient.hpp"
+//#include "CELLLog.hpp"
 #include<thread>
+#include<atomic>
 
 #pragma comment(lib,"ws2_32.lib")
 
@@ -33,6 +36,8 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 LPCWSTR String2LPCWSTR(string text);
 string Dec2Hex(DWORD i);
 WCHAR* CharToWChar(char* s);
+void SocketClient();
+void DebugInfo(string text);
 
 //定义变量
 DWORD wxBaseAddress = 0;
@@ -46,7 +51,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		CELLLog::Instance().setLogPath("WeChatHelper.txt", "a");
+		//CELLLog::Instance().setLogPath("WeChatHelper.txt", "a");
 
 		HANDLE hANDLE = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowDemoUI, hModule, NULL, 0);
 		if (hANDLE != 0)
@@ -70,9 +75,10 @@ VOID ShowDemoUI(HMODULE hModule)
 {
 	//获取WeChatWin.dll的基址
 	wxBaseAddress = (DWORD)GetModuleHandle(TEXT("WeChatWin.dll"));
-	string text = "微信基址：\t";
+	string text = "weixin base address: \t";
 	text.append(Dec2Hex(wxBaseAddress));
-	OutputDebugString(String2LPCWSTR(text));
+	DebugInfo(text);
+	//OutputDebugString(String2LPCWSTR(text));
 
 	DialogBox(hModule, MAKEINTRESOURCE(IDD_MAIN), NULL, &DialogProc);
 }
@@ -90,6 +96,8 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 	{
 		setGlobalHwnd(hwndDlg);
 		SetDlgItemText(hwndDlg, DEBUG_INFO, L"dll注入成功，已开始监听微信数据。");
+
+		//CELLLog::Instance().setLogPath("WeChatHelper.txt", "a");
 
 		//// 登录状态
 		//HANDLE lThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)getLoginStatus, NULL, NULL, 0);
@@ -140,9 +148,27 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 					myInfo->header);
 				SetDlgItemText(hwndDlg, TEXT_MY_INFO, str);
 			}
+		
+			break;
+
 		}
 
-		break;
+		
+
+		if (wParam == BTN_SOCKET)
+		{
+			//CELLLog::Instance().setLogPath("WeChatHelper.txt", "a");
+			//CELLLog::Info("BTN_SOCKET_CLIENT begin.\n");
+
+			DebugInfo("BTN_SOCKET begin...");
+
+			thread t1(SocketClient);
+			t1.detach();
+
+			break;
+		}
+		
+
 	default:
 		break;
 	}
@@ -218,3 +244,37 @@ string WcharToString(WCHAR* wchar)
 	return psText;
 }
 
+
+
+
+bool g_bRun = true;
+
+void SocketClient() 
+{
+	DebugInfo("SocketClient begin...");
+
+	const int cCount = 1;
+	EasyTcpClient* client[cCount];
+
+	client[0] = new EasyTcpClient();
+	client[0]->Connect("127.0.0.1", 4567);
+
+	Login login;
+	strcpy(login.userName, "lyd");
+	strcpy(login.PassWord, "lydmm");
+	
+	DebugInfo("SendData login...");
+
+	client[0]->SendData(&login);
+	client[0]->OnRun();
+
+	client[0]->Close();
+
+}
+
+
+
+void DebugInfo(string text) {
+	OutputDebugString(String2LPCWSTR(text));
+
+}
