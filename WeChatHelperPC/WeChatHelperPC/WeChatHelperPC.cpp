@@ -30,7 +30,12 @@ const wchar_t* dllName = L"WeChatHelperDll.dll";
 
 const wchar_t* weChatName = L"WeChat.exe";
 HWND   hwnd;
-bool g_bRun = true;
+
+// socket
+#include"EasyTcpClient.hpp"
+//#include "CELLLog.hpp"
+#include<thread>
+#include<atomic>
 
 INT_PTR CALLBACK Dlgproc(
 	_In_ HWND   hwndDlg,
@@ -43,7 +48,8 @@ BOOL CloseWeChat();
 VOID InjectDll();
 BOOL CheckInject(DWORD dwProcessid);
 VOID UnInjectDll();
-void SocketServer();
+void SocketClient();
+void SendMsg();
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -98,13 +104,16 @@ INT_PTR CALLBACK Dlgproc(
 		case BTN_SOCKET_SERVER:
 		{
 			CELLLog::Info("BTN_SOCKET_SERVER begin");
-			thread t1(SocketServer);
+			thread t1(SocketClient);
 			t1.detach();
 			break;
 		}
-		case BTN_SOCKET_CLOSE:
+		case BTN_SEND_MSG:
 		{
-			g_bRun = false;
+			
+			CELLLog::Info("SendMsg begin");
+			thread t1(SendMsg);
+			t1.detach();
 			break;
 		}
 
@@ -458,21 +467,40 @@ VOID UnInjectDll()
 
 
 
-void SocketServer() {
 
-	EasyTcpServer server;
-	server.InitSocket();
-	server.Bind(nullptr, 4567);
-	server.Listen(5);
+void SocketClient() 
+{
+
+	const int cCount = 1;
+	EasyTcpClient* client[cCount];
+
+	client[0] = new EasyTcpClient();
+	client[0]->Connect("127.0.0.1", 4567);
+
+	Login login;
+	strcpy(login.userName, "lyd");
+	strcpy(login.PassWord, "lydmm");
+	
+
+	client[0]->SendData(&login);
+	client[0]->OnRun();
+	client[0]->Close();
+
+}
 
 
-	CELLLog::Info("before  g_bRun \n");
-	while (g_bRun)
-	{
-		server.OnRun();
-		//printf("空闲时间处理其它业务..\n");
-	}
+void SendMsg() {
+	const int cCount = 1;
+	EasyTcpClient* client[cCount];
 
-	server.Close();
-	CELLLog::Info("SocketServer exit");
+	client[0] = new EasyTcpClient();
+	client[0]->Connect("127.0.0.1", 4567);
+
+	Logout logout;
+	strcpy(logout.userName, "zhangsan");
+
+	client[0]->SendData(&logout);
+	client[0]->OnRun();
+	client[0]->Close();
+
 }

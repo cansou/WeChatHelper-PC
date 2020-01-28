@@ -7,6 +7,7 @@
 #include<windows.h>
 #include<WinSock2.h>
 #include "CELLLog.hpp"
+#include <string>
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include<unistd.h> //uni std
@@ -329,22 +330,24 @@ public:
 		{
 		case CMD_LOGIN:
 		{
-			CELLLog::Info("EasyTcpServer - OnNetMsg - CMD_LOGIN start \n");
+			OutputDebugString(L"EasyTcpServer - OnNetMsg - CMD_LOGIN start \n");
 			Login* login = (Login*)header;
 			//printf("收到客户端<Socket=%d>请求：CMD_LOGIN,数据长度：%d,userName=%s PassWord=%s\n", cSock, login->dataLength, login->userName, login->PassWord);
 			//忽略判断用户密码是否正确的过程
 			LoginResult ret;
 			SendData(cSock, &ret);
-			CELLLog::Info("EasyTcpServer - OnNetMsg - CMD_LOGIN end \n");
+			OutputDebugString(L"EasyTcpServer - OnNetMsg - CMD_LOGIN end \n");
 		}
 		break;
 		case CMD_LOGOUT:
 		{
+			OutputDebugString(L"EasyTcpServer - OnNetMsg - CMD_LOGOUT start \n");
 			Logout* logout = (Logout*)header;
 			//printf("收到客户端<Socket=%d>请求：CMD_LOGOUT,数据长度：%d,userName=%s \n", cSock, logout->dataLength, logout->userName);
 			//忽略判断用户密码是否正确的过程
 			LogoutResult ret;
 			SendData(cSock, &ret);
+			OutputDebugString(L"EasyTcpServer - OnNetMsg - CMD_LOGOUT end \n");
 		}
 		break;
 		default:

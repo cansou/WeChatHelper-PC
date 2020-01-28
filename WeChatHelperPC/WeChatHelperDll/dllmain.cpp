@@ -20,11 +20,9 @@
 #include "Utils.h"
 #include <CommCtrl.h>
 
-// socket
-#include"EasyTcpClient.hpp"
-//#include "CELLLog.hpp"
+#include "EasyTcpServer.hpp"
 #include<thread>
-#include<atomic>
+
 
 #pragma comment(lib,"ws2_32.lib")
 
@@ -36,11 +34,15 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 LPCWSTR String2LPCWSTR(string text);
 string Dec2Hex(DWORD i);
 WCHAR* CharToWChar(char* s);
-void SocketClient();
+void SocketServer();
 void DebugInfo(string text);
 
 //定义变量
 DWORD wxBaseAddress = 0;
+
+bool g_bRun = true;
+EasyTcpServer server;
+
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -162,7 +164,7 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 
 			DebugInfo("BTN_SOCKET begin...");
 
-			thread t1(SocketClient);
+			thread t1(SocketServer);
 			t1.detach();
 
 			break;
@@ -245,34 +247,22 @@ string WcharToString(WCHAR* wchar)
 }
 
 
+void SocketServer() {
 
 
-bool g_bRun = true;
+	server.InitSocket();
+	server.Bind(nullptr, 4567);
+	server.Listen(1);
 
-void SocketClient() 
-{
-	DebugInfo("SocketClient begin...");
+	while (g_bRun)
+	{
+		server.OnRun();
+		//printf("空闲时间处理其它业务..\n");
+	}
 
-	const int cCount = 1;
-	EasyTcpClient* client[cCount];
-
-	client[0] = new EasyTcpClient();
-	client[0]->Connect("127.0.0.1", 4567);
-
-	Login login;
-	strcpy(login.userName, "lyd");
-	strcpy(login.PassWord, "lydmm");
-	
-	DebugInfo("SendData login...");
-
-	client[0]->SendData(&login);
-	client[0]->OnRun();
-
-	client[0]->Close();
-
+	server.Close();
+	CELLLog::Info("SocketServer exit");
 }
-
-
 
 void DebugInfo(string text) {
 	OutputDebugString(String2LPCWSTR(text));
