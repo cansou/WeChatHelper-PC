@@ -22,7 +22,6 @@ VOID HookWx();
 VOID RecieveMsg();
 VOID RecieveMsgHook();
 string Dec2Hex(DWORD i);
-LPCWSTR String2LPCWSTR(string text);
 LPCWSTR GetMsgByAddress(DWORD memAddress);
 wstring String2Wstring(string str);
 
@@ -41,51 +40,15 @@ string myWxId = "";
 
 CHAR originalCode[5] = { 0 };
 
-
-
-//把string 转换为 LPCWSTR
-LPCWSTR String2LPCWSTR(string text)
-{
-	//原型：
-	//typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
-	//typedef wchar_t WCHAR;
-
-	size_t size = text.length();
-	WCHAR* buffer = new WCHAR[size + 1];
-	MultiByteToWideChar(CP_ACP, 0, text.c_str(), -1, buffer, size + 1);
-
-	//确保以 '\0' 结尾
-	buffer[size] = 0;
-	return buffer;
-}
-
-
-//将int转成16进制字符串
-string Dec2Hex(DWORD i)
-{
-	//定义字符串流
-	stringstream ioss;
-
-	//存放转化后字符
-	string s_temp;
-
-	//以8位十六制(大写)形式输出
-	ioss.fill('0');
-	ioss << setiosflags(ios::uppercase) << setw(8) << hex << i;
-	ioss >> s_temp;
-
-	return "0x" + s_temp;
-}
-
 //Hook接收消息
 VOID HookWx()
 {
 
 		//WeChatWin.dll+0x310573
 		int hookAddress = getWeChatWinAddr() + 0x325373;
-		string debugMsg = "Hook的地址：\t";
+		string debugMsg = "Hook address：\t";
 		debugMsg.append(Dec2Hex(hookAddress));
-		OutputDebugString(String2LPCWSTR(debugMsg));
+		OutputDebugString(stringToLPCWSTR(debugMsg));
 
 		//跳回的地址
 		jumBackAddress = hookAddress + 5;
@@ -145,8 +108,6 @@ VOID RecieveMsg()
 	string fromWxid;
 	string senderWxid;
 	string content ;
-
-
 
 	wstring receivedMessage = TEXT("");
 	BOOL isFriendMsg = FALSE;
@@ -292,54 +253,11 @@ VOID RecieveMsg()
 	SetDlgItemText(getGlobalHwnd(), TEXT_RECIEVE_MSG, receivedMessage.c_str());
 
 
+	//如果收到的信息是文本，开个线程数据保持到mysql
 	if (msgType == 0x01) {
-
-
-		//如果收到的信息是文本，开个线程数据保持到mysql
-		SetDlgItemText(getGlobalHwnd(), DEBUG_INFO, L"数据持久化，保存到数据库");
 		thread t1(InsertData, fromWxid, senderWxid, content);
 		t1.detach();
 	}
 
 
-}
-
-//读取内存中的字符串
-//存储格式
-//xxxxxxxx:字符串地址（memAddress）
-//xxxxxxxx:字符串长度（memAddress +4）
-LPCWSTR GetMsgByAddress(DWORD memAddress)
-{
-	//获取字符串长度
-	DWORD msgLength = *(DWORD*)(memAddress + 4);
-	if (msgLength == 0)
-	{
-		WCHAR* msg = new WCHAR[1];
-		msg[0] = 0;
-		return msg;
-	}
-
-	WCHAR* msg = new WCHAR[msgLength + 1];
-	ZeroMemory(msg, msgLength + 1);
-
-	//复制内容
-	wmemcpy_s(msg, msgLength + 1, (WCHAR*)(*(DWORD*)memAddress), msgLength + 1);
-	return msg;
-}
-
-
-//将string转换成wstring  
-wstring String2Wstring(string str)
-{
-	wstring result;
-	//获取缓冲区大小，并申请空间，缓冲区大小按字符计算  
-	int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), NULL, 0);
-	TCHAR* buffer = new TCHAR[len + 1];
-	//多字节编码转换成宽字节编码  
-	MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), buffer, len);
-	buffer[len] = '\0';             //添加字符串结尾  
-	//删除缓冲区并返回值  
-	result.append(buffer);
-	delete[] buffer;
-	return result;
 }

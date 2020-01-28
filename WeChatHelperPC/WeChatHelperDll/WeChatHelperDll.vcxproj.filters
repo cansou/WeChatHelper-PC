@@ -31,6 +31,9 @@
     <Filter Include="ReceiveMsg">
       <UniqueIdentifier>{52564e4d-d2ef-4a92-aa54-8d8f6546a6ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SendMsg">
+      <UniqueIdentifier>{a2a8fbfb-fba1-4ed4-89a7-6a508a7386ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -60,6 +63,9 @@
     <ClInclude Include="Offset.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="SendMsg.h">
+      <Filter>SendMsg</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -79,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="MySqlTool.cpp">
       <Filter>MySql</Filter>
+    </ClCompile>
+    <ClCompile Include="SendMsg.cpp">
+      <Filter>SendMsg</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
