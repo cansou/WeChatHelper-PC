@@ -88,11 +88,11 @@ INT_PTR CALLBACK DialogProc(_In_ HWND   hwndDlg, _In_ UINT   uMsg, _In_ WPARAM w
 		setGlobalHwnd(hwndDlg);
 		SetDlgItemText(hwndDlg, DEBUG_INFO, L"dll注入成功，已开始监听微信数据。");
 
-		// 接收消息
-		HANDLE hookThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)HookWx, NULL, NULL, 0);
-		if (hookThread != 0) {
-			CloseHandle(hookThread);
-		}
+		//// 接收消息
+		//HANDLE hookThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)HookWx, NULL, NULL, 0);
+		//if (hookThread != 0) {
+		//	CloseHandle(hookThread);
+		//}
 		break;
 	}
 

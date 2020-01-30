@@ -30,15 +30,17 @@ struct StructWxid
 
 VOID SentTextMessage()
 {
-
+	DebugInfo("SentTextMessage");
 	DWORD wxBaseAddress = (DWORD)GetModuleHandle(TEXT("WeChatWin.dll"));
 	string text = "";
 
 	//定位发送消息的Call的位置
-	DWORD callAddress_SendText = wxBaseAddress + 0xD0E62;
+	DWORD callAddress_SendText = wxBaseAddress + 0x2FA7F0;
 
 	//组装wxid数据
-	WCHAR wxid[50] = L"wxid_4j4mqsuzdgie22";
+	//WCHAR wxid[50] = L"wxid_4j4mqsuzdgie22";
+	WCHAR wxid[50] = L"wxid_4sy2barbyny712";	//qiong
+	
 	StructWxid structWxid = { 0 };
 	structWxid.pWxid = wxid;
 	structWxid.length = wcslen(wxid);
